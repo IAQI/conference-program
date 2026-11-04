@@ -46,6 +46,8 @@ import yaml
 PREFIX = re.compile(
     r"^\s*(?:(?:invited|tutorial|contributed|plenary|keynote|industry|public|award|best\s+\w+\s+paper)"
     r"(?:\s+(?:talk|lecture|session|panel))?\s*[:\-–|]\s*)+", re.I)
+PREFIX_NO_SEP = re.compile(   # "INVITED TALK John Watrous: ..."
+    r"^\s*(?:invited|plenary|tutorial|contributed|keynote)\s+(?:talk|lecture|session)\s+", re.I)
 PID_TAG = re.compile(r"^\s*#\d+(?:\s*/\s*#?\d+)*\s*")
 TRAILER = re.compile(r"\s*[|–\-]\s*(?:qcrypt|tqc|qip)\s*\d{4}.*$", re.I)
 
@@ -64,6 +66,7 @@ def clean_title(title):
     title = TRAILER.sub("", title)
     title = PAREN_LABEL.sub(r"\1", title)
     title = PREFIX.sub("", title)
+    title = PREFIX_NO_SEP.sub("", title)
     return PID_TAG.sub("", title).strip()
 
 
@@ -79,7 +82,7 @@ def variants(video_title):
     out = [(base, None)]
     if ":" in base:
         left, right = (x.strip() for x in base.split(":", 1))
-        speakers = [s.strip() for s in re.split(r"\s*&\s*|\s+and\s+", left)]
+        speakers = [s.strip() for s in re.split(r"\s*[&|,]\s*|\s+and\s+", left)]
         if all(looks_like_name(s) for s in speakers):  # "Speaker Name: Title", "A & B: Title"
             out.append((right, left))
         left, right = (x.strip() for x in base.rsplit(":", 1))
@@ -98,6 +101,43 @@ def similarity(video, target):
         a = normalize(video.rstrip(" .…"))
         b = b[:len(a)]
     return difflib.SequenceMatcher(None, a, b).ratio()
+
+
+def front_matter(path):
+    m = re.match(r"---\s*\n(.*?)\n---", path.read_text(encoding="utf-8"), re.S)
+    return (yaml.safe_load(m.group(1)) if m else None) or {}
+
+
+def load_speaker_names(site, year):
+    """Map speaker keys to the names that may appear in a video title."""
+    names = {}
+    speakers_dir = site / "content" / year / "speakers"
+    for page in speakers_dir.rglob("*.md") if speakers_dir.exists() else []:
+        front = front_matter(page)
+        if front.get("key") and front.get("name"):
+            names[str(front["key"])] = str(front["name"])
+    return names
+
+
+def load_sessions_by_speaker(site, year):
+    """(session key, [speaker names]) for sessions that list speakers."""
+    out = []
+    known = load_speaker_names(site, year)
+    sessions_dir = site / "content" / year / "sessions"
+    for page in sorted(sessions_dir.rglob("*.md")) if sessions_dir.exists() else []:
+        speakers = front_matter(page).get("speakers") or []
+        if speakers and not page.name.startswith("_"):
+            names = [known.get(str(k), str(k).replace("_", " ").replace("-", " ")) for k in speakers]
+            out.append((page.relative_to(sessions_dir).with_suffix("").as_posix(), names))
+    return out
+
+
+def match_by_speaker(video_title, sessions_by_speaker):
+    """The one session whose speaker's name appears in the video title, or None."""
+    title = f" {normalize(video_title)} "
+    hits = [key for key, names in sessions_by_speaker
+            if any(f" {normalize(n)} " in title for n in names if normalize(n))]
+    return hits[0] if len(set(hits)) == 1 else None
 
 
 def load_targets(site, year):
@@ -128,9 +168,17 @@ def list_playlist(url):
     return json.loads(out)
 
 
-def match(videos, targets, threshold):
+def match(videos, targets, threshold, sessions_by_speaker=()):
     found, unmatched = {}, []
     for v in videos:
+        scored = [(similarity(t, target), kind) for t, _ in variants(v["title"])
+                  for kind, _, target in targets]
+        if not any(s >= threshold for s, _ in scored):
+            # no title matches: an invited talk or tutorial titled by its speaker?
+            key = match_by_speaker(v["title"], sessions_by_speaker)
+            if key and ("sessions", key) not in found:
+                found[("sessions", key)] = {"id": v["id"], "title": v["title"]}
+                continue
         scored = []
         for title, presenter in variants(v["title"]):
             for kind, key, target in targets:
@@ -174,11 +222,12 @@ def main(argv=None):
     videos, seen = [], set()
     for pl in playlists:
         for e in pl.get("entries") or []:
-            if e.get("id") and e["id"] not in seen and e.get("title") not in ("[Private video]", "[Deleted video]"):
+            title = e.get("title") or ""
+            if e.get("id") and e["id"] not in seen and title not in ("", "[Private video]", "[Deleted video]"):
                 seen.add(e["id"])
-                videos.append({"id": e["id"], "title": e.get("title", "")})
+                videos.append({"id": e["id"], "title": title})
     targets = load_targets(site, year)
-    found, unmatched = match(videos, targets, args.threshold)
+    found, unmatched = match(videos, targets, args.threshold, load_sessions_by_speaker(site, year))
 
     result = {"papers": {}, "sessions": {}}
     for (kind, key), entry in found.items():

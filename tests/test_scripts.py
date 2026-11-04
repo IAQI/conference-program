@@ -116,6 +116,14 @@ class FetchVideosTest(unittest.TestCase):
         self.assertEqual(videos["papers"]["100"]["id"], "zzz")  # override
         self.assertIn("eee", out)  # reported, not linked
 
+    def test_match_by_speaker(self):
+        sessions = [("tutorial_aharonov", ["aharonov"]), ("tutorial_lami", ["Ludovico Lami"]),
+                    ("panel", ["Ludovico Lami", "Someone Else"])]
+        self.assertEqual(fetch_videos.match_by_speaker("QIP 2026 Tutorials: Dorit Aharonov", sessions),
+                         "tutorial_aharonov")
+        self.assertIsNone(fetch_videos.match_by_speaker("Tutorial: Ludovico Lami", sessions))  # ambiguous
+        self.assertIsNone(fetch_videos.match_by_speaker("Tutorial: Nobody", sessions))
+
     def test_clean_title(self):
         self.assertEqual(fetch_videos.clean_title("Invited Talk: On obfuscation"), "On obfuscation")
         self.assertEqual(fetch_videos.clean_title("Contributed Talk: #8/#100 Uncloneable"), "Uncloneable")
