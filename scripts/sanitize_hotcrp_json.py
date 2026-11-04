@@ -19,8 +19,12 @@ What it does, per submission:
     plenary / talk) derived from the decision, for QIP-style talk lists;
   * --search-arxiv: looks up submissions without an arXiv id on arXiv
     (by title and first author, one request every 3 seconds);
-  * removes every private field listed in PRIVATE_KEYS (see
-    --list-removed-keys), unless kept with --keep.
+  * keeps only the public fields listed in PUBLIC_FIELDS / PUBLIC_AUTHOR_FIELDS
+    (title, abstract, author names and affiliations, topics, ...); everything
+    else is dropped, unless kept with --keep (see --list-kept-fields).
+    New HotCRP fields are therefore private until someone decides otherwise.
+If the export contains decisions, --decision (or --all) is required, so that
+a full export never ends up public by accident.
 Several input files are concatenated, e.g. the talk and the poster-only
 HotCRP instances (shift the ids of the second with adjust_pids.py first).
 """
@@ -34,14 +38,10 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-PRIVATE_KEYS = {
-    "email", "pc_conflicts", "metadata", "collaborators", "tags", "decision",
-    "status", "submitted", "submitted_at", "modified_at", "submission",
-    "submission_track", "full_version", "technical_manuscript", "talk_poster",
-    "talk_only_submission", "poster_consideration", "eligible_student_paper_prize",
-    "eligibility_best_student_paper_prize", "submission_eligible_student_paper_prize",
-    "opt_out_transparent_peer_review",
-}
+# Allowlists: only these fields are published.
+PUBLIC_FIELDS = ["object", "pid", "title", "abstract", "authors", "topics"]
+PUBLIC_AUTHOR_FIELDS = ["first", "last", "affiliation", "contact"]
+PUBLIC_OPTIONS = ["arxiv-id", "talk-type"]
 
 ARXIV_ID = re.compile(r"\b(\d{4}\.\d{4,5})(?:v\d+)?\b")
 
@@ -99,27 +99,23 @@ def merged_with(tags, pid):
     return None
 
 
-def strip(value, remove):
-    if isinstance(value, dict):
-        return {k: strip(v, remove) for k, v in value.items() if k not in remove}
-    if isinstance(value, list):
-        return [strip(v, remove) for v in value]
-    return value
-
-
-def sanitize_submission(sub, args, remove):
+def sanitize_submission(sub, args, keep):
     out = {}
-    options = dict(sub.get("options") or {})
+    options = {k: v for k, v in (sub.get("options") or {}).items() if k in PUBLIC_OPTIONS}
     merge = merged_with(sub.get("tags"), sub.get("pid"))
     arxiv = normalize_arxiv_id(sub.get("arxiv_number_url"))
     if arxiv:
         options["arxiv-id"] = arxiv
     if args.talk_type_from_decision:
         options["talk-type"] = talk_type(sub.get("decision"))
-    for key, value in sub.items():
-        if key in remove or key in ("arxiv_number_url", "options"):
+    for key in PUBLIC_FIELDS + [k for k in keep if k not in PUBLIC_FIELDS]:
+        if key not in sub:
             continue
-        out[key] = strip(value, remove)
+        if key == "authors":
+            out["authors"] = [{k: a[k] for k in PUBLIC_AUTHOR_FIELDS if k in a}
+                              for a in sub["authors"] if isinstance(a, dict)]
+        else:
+            out[key] = sub[key]
     if merge is not None:
         out["mergedwith"] = merge
     if args.search_arxiv and "arxiv-id" not in options and out.get("title"):
@@ -128,7 +124,6 @@ def sanitize_submission(sub, args, remove):
         print(f"  {'found ' + str(found) if found else 'not found'}")
         if found:
             options["arxiv-id"] = found
-    options = strip(options, remove)
     if options:
         out["options"] = options
     return out
@@ -141,16 +136,19 @@ def main(argv=None):
     parser.add_argument("-o", "--output", metavar="OUT.json")
     parser.add_argument("--decision", metavar="REGEX",
                         help="keep only submissions whose decision matches, e.g. 'Accept'")
+    parser.add_argument("--all", action="store_true",
+                        help="keep every submission even though the export has decisions")
     parser.add_argument("--keep", action="append", default=[], metavar="KEY",
-                        help="do not remove this field (repeatable)")
+                        help="also publish this top-level field (repeatable)")
     parser.add_argument("--talk-type-from-decision", action="store_true")
     parser.add_argument("--search-arxiv", action="store_true")
-    parser.add_argument("--list-removed-keys", action="store_true")
+    parser.add_argument("--list-kept-fields", action="store_true")
     args = parser.parse_args(argv)
 
-    remove = PRIVATE_KEYS - set(args.keep)
-    if args.list_removed_keys:
-        print("\n".join(sorted(remove)))
+    if args.list_kept_fields:
+        print("submission:", ", ".join(PUBLIC_FIELDS + args.keep))
+        print("author:    ", ", ".join(PUBLIC_AUTHOR_FIELDS))
+        print("options:   ", ", ".join(PUBLIC_OPTIONS))
         return 0
     if not args.inputs or not args.output:
         parser.error("give one or more input files and -o OUTPUT")
@@ -161,6 +159,10 @@ def main(argv=None):
         data = data if isinstance(data, list) else [data]
         print(f"{path}: {len(data)} submissions")
         submissions.extend(data)
+    if not args.decision and not args.all and any(s.get("decision") for s in submissions):
+        print("Error: the export contains decisions. Pass --decision REGEX (e.g. 'accept') to keep "
+              "only accepted submissions, or --all to keep everything.", file=sys.stderr)
+        return 1
     if args.decision:
         pattern = re.compile(args.decision, re.I)
         kept = [s for s in submissions if pattern.search(str(s.get("decision", "")))]
@@ -174,7 +176,7 @@ def main(argv=None):
               file=sys.stderr)
         return 1
 
-    result = [sanitize_submission(s, args, remove) for s in submissions]
+    result = [sanitize_submission(s, args, args.keep) for s in submissions]
     Path(args.output).write_text(json.dumps(result, indent=4, ensure_ascii=False) + "\n",
                                  encoding="utf-8")
     print(f"wrote {len(result)} submissions to {args.output}")

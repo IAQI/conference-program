@@ -128,17 +128,23 @@ class SanitizeTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             raw = [
                 {"pid": 1, "title": "A", "decision": "Accept (talk)", "status": "accepted",
-                 "authors": [{"first": "X", "last": "Y", "email": "x@y.org"}],
+                 "some_new_hotcrp_field": "secret",
+                 "authors": [{"first": "X", "last": "Y", "email": "x@y.org", "orcid": "0000"}],
                  "tags": [{"tag": "merge-1-2"}], "arxiv_number_url": "https://arxiv.org/abs/2503.19125v2"},
                 {"pid": 2, "title": "B", "decision": "Accept (talk)", "authors": [], "tags": [{"tag": "merge-1-2"}]},
                 {"pid": 3, "title": "C", "decision": "Reject", "authors": []},
             ]
             Path(d, "raw.json").write_text(json.dumps(raw))
+            # an export with decisions needs --decision or --all
+            self.assertEqual(sanitize_hotcrp_json.main([str(Path(d, "raw.json")), "-o", str(Path(d, "x.json"))]), 1)
+            self.assertFalse(Path(d, "x.json").exists())
             sanitize_hotcrp_json.main([str(Path(d, "raw.json")), "-o", str(Path(d, "out.json")),
                                        "--decision", "accept", "--talk-type-from-decision"])
             out = json.loads(Path(d, "out.json").read_text())
         self.assertEqual([p["pid"] for p in out], [1, 2])          # rejected one dropped
         self.assertNotIn("email", json.dumps(out))
+        self.assertNotIn("secret", json.dumps(out))   # unknown fields are dropped
+        self.assertEqual(out[0]["authors"], [{"first": "X", "last": "Y"}])
         self.assertNotIn("decision", out[0])
         self.assertEqual(out[0]["mergedwith"], 2)
         self.assertEqual(out[1]["mergedwith"], 1)

@@ -75,13 +75,15 @@ python3 ../conference-program/scripts/sanitize_hotcrp_json.py private_data/hotcr
     --decision accept -o data/accepted-papers-2027.json
 # posters from a separate HotCRP instance: shift their ids first, so that ids never clash
 python3 ../conference-program/scripts/adjust_pids.py private_data/hotcrp-posters.json private_data/posters-shifted.json --offset 1000
-python3 ../conference-program/scripts/sanitize_hotcrp_json.py private_data/posters-shifted.json -o data/posters-2027.json
+python3 ../conference-program/scripts/sanitize_hotcrp_json.py private_data/posters-shifted.json --decision accept -o data/posters-2027.json
 ```
 
 Useful options: `--search-arxiv` looks up the arXiv id of each paper (slow:
 3 s per paper), `--talk-type-from-decision` sorts papers into long-plenary /
-plenary / talk (QIP), and `--keep KEY` keeps a field that would otherwise be
-removed (`--list-removed-keys` lists them). Merged submissions (HotCRP tag
+plenary / talk (QIP), and `--keep KEY` publishes an extra field. Only the fields shown by
+`--list-kept-fields` (title, abstract, author names and affiliations, topics)
+are published; everything else in the export is dropped. If the export
+contains decisions, `--decision` (or `--all`) is required. Merged submissions (HotCRP tag
 `merge-108-377`) become `mergedwith`.
 
 The pages `{{< papers-accepted year=2027 >}}{{< /papers-accepted >}}` and
