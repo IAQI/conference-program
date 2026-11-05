@@ -195,13 +195,16 @@ Then, once per site:
 ```sh
 hugo mod init github.com/IAQI/<site>-website
 hugo mod get github.com/IAQI/conference-program@main
-hugo mod vendor          # copies the module into _vendor/, so builds need neither Go nor network
 ```
 
-Commit `go.mod`, `go.sum` and `_vendor/`.
+Commit `go.mod` and `go.sum`: they pin the exact version of the module. Hugo
+downloads that version at build time, which needs [Go](https://go.dev/dl/):
+locally, and on Netlify via `GO_VERSION = "1.23.4"` under `[build.environment]`
+in `netlify.toml`. (`hugo mod vendor` would instead copy the module into
+`_vendor/`, for build environments without Go; the IAQI sites don't need it.)
 
-- **Updating:** `hugo mod get -u github.com/IAQI/conference-program && hugo mod vendor`,
-  then commit the result.
+- **Updating:** `hugo mod get -u github.com/IAQI/conference-program`, then commit
+  `go.mod` and `go.sum`. A site only changes when its pin is updated.
 - **Local work on the module:** to preview changes to the module itself in a
   site, run
   `HUGO_MODULE_REPLACEMENTS="github.com/IAQI/conference-program -> $HOME/Web/conference-program" hugo server`.
