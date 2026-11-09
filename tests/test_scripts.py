@@ -131,6 +131,33 @@ class FetchVideosTest(unittest.TestCase):
                          "Jian-Wei Pan: Dream")
 
 
+class QuantumDBPresentersTest(unittest.TestCase):
+    def test_presenters(self):
+        site = Site()
+        self.addCleanup(site.tmp.cleanup)
+        export = {"publications": [
+            {"title": "Compressed permutation oracles", "paper_type": "regular", "youtube_id": "aaa",
+             "authors": [{"name": "Joseph Carolan", "is_presenter": True}]},
+            {"title": "A rigorous and complete security proof of decoy-state BB84", "paper_type": "regular",
+             "authors": [{"name": "Ada M. Lovelace", "is_presenter": True}]},
+            {"title": "Something not accepted at all", "paper_type": "regular",
+             "authors": [{"name": "X Y", "is_presenter": True}]},
+            {"title": "Invited Talk: Less is More", "paper_type": "invited",
+             "authors": [{"name": "Eli Goldin", "is_presenter": True}]},
+        ]}
+        (site.root / "qdb.json").write_text(json.dumps(export))
+        (site.root / "data" / "presenters-overrides-2026.yml").write_text('"8": ["Bob Builder"]\n')
+        out = run("quantumdb_presenters.py", "--venue", "qcrypt", "--year", "2026", "--from-json", "qdb.json",
+                  cwd=site.root)
+        presenters = yaml.safe_load((site.root / "data/presenters-2026.yml").read_text())
+        self.assertEqual(presenters["63"], ["Joseph Carolan"])
+        self.assertEqual(presenters["7"], ["Ada Lovelace"])     # our spelling
+        self.assertEqual(presenters["8"], ["Bob Builder"])      # override
+        self.assertEqual(len(presenters), 3)
+        self.assertIn("Something not accepted", out)            # reported
+        self.assertNotIn("Less is More", out)                   # invited talks are not papers
+
+
 class SanitizeTest(unittest.TestCase):
     def test_sanitize(self):
         with tempfile.TemporaryDirectory() as d:
