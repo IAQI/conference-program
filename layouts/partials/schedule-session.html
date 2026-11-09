@@ -102,23 +102,27 @@
 	{{ end }}
 </a>
 
-{{/* Recordings: one for the whole session, or one per paper. */}}
+{{/* Recordings: one for the whole session, or one per paper (numbered like
+     the paper list, with the title as tooltip). They are shown in the card's
+     bottom-right corner (see _program.scss) but sit outside the card's link,
+     since links cannot be nested. */}}
 {{ $links := slice }}
 {{ $sessionVideo := partial "program/video.html" (dict "year" $year "session" $session.session) }}
 {{ with $sessionVideo.id | default $page.Params.videoId }}
-	{{ $links = $links | append (dict "url" (printf "https://youtu.be/%s" .) "label" "Video") }}
+	{{ $links = $links | append (dict "url" (printf "https://youtu.be/%s" .) "label" "Video" "title" (printf "Video: %s" $page.Title)) }}
 {{ end }}
-{{ range $paper := $records }}
+{{ range $i, $paper := $records }}
 	{{ with partial "program/video.html" (dict "year" $year "pid" $paper.pid) }}
 		{{ if .id }}
 		{{ $label := "Video" }}
-		{{ if gt (len $records) 1 }}{{ $label = printf "Video: %s" (truncate 50 $paper.title) }}{{ end }}
-		{{ $links = $links | append (dict "url" (printf "https://youtu.be/%s" .id) "label" $label) }}
+		{{ if gt (len $records) 1 }}{{ $label = string (add $i 1) }}{{ end }}
+		{{ $links = $links | append (dict "url" (printf "https://youtu.be/%s" .id) "label" $label "title" (printf "Video: %s" $paper.title)) }}
 		{{ end }}
 	{{ end }}
 {{ end }}
 {{ with $links }}
 <div class="session-media">
-	{{ range . }}<a href="{{ .url }}" target="_blank" rel="noopener">&#9654; {{ .label }}</a>{{ end }}
+	{{ if gt (len .) 1 }}<span class="session-media-label">Videos:</span>{{ end }}
+	{{ range . }}<a href="{{ .url }}" target="_blank" rel="noopener" title="{{ .title }}" aria-label="{{ .title }}">&#9654;&#xFE0E; {{ .label }}</a>{{ end }}
 </div>
 {{ end }}
