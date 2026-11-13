@@ -64,7 +64,7 @@ The most used ones:
 | `speakers`, `teams` | the speakers and the committees |
 | `button-link` | a button: `label=`, `url=`, `icon=` |
 | `papers-accepted`, `posters-accepted` | the accepted papers and posters (see the README) |
-| `code-of-conduct` | a standard code of conduct: `name=` (e.g. "QCrypt"); a site can also keep its own text |
+| `code-of-conduct` | a standard code of conduct: `{{< code-of-conduct name="QCrypt" />}}`; a site can also keep its own text |
 
 The original theme's documentation of these blocks is in [theme-reference.md](theme-reference.md).
 
