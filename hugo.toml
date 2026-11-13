@@ -1,5 +1,6 @@
-# Module configuration for github.com/IAQI/conference-theme.
-# Sites import this module before their visual theme; see README.md.
+# Module configuration for github.com/IAQI/conference-theme, the shared theme of
+# the QCrypt, TQC and QIP websites. Sites import it as their only module; see
+# README.md and docs/website-guide.md.
 [module]
   [module.hugoVersion]
     extended = true
