@@ -151,6 +151,21 @@ python3 ../conference-program/scripts/mark_presenters.py --year 2027 \
 - **Display:** presenters are shown in **bold** on paper lists and in
   *italics* on schedule cards.
 
+**Alternatively, from [QuantumDB](https://quantumdb.iaqi.org).** IAQI's
+database of the three conferences records who presented each talk (CC0 data).
+Once a conference is entered there:
+
+```sh
+python3 ../conference-program/scripts/quantumdb_presenters.py --venue qcrypt --year 2027
+```
+
+It matches QuantumDB's publications to the accepted papers by title, writes
+`data/presenters-2027.yml` with the names spelled as in your data, and also
+applies the overrides file. It reports publications it cannot match, and any
+recording whose YouTube id differs from `data/videos-2027.yml`. On TQC 2026
+its result agreed exactly with the registration-based one for the 125 papers
+both sources cover. Use one script or the other, since both write the same file.
+
 ### 4. After the conference
 
 - **Videos.** Upload the recordings to YouTube in one or more playlists, then
