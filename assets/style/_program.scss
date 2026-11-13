@@ -83,18 +83,40 @@ html {
     font-weight: normal;
   }
 
+  // Video links: drawn in the bottom-right corner of the card. In the HTML
+  // they follow the card's link (links cannot be nested), so the card gets
+  // room for them at the bottom.
+  .session {
+    position: relative;
+  }
+
+  .session:has(> .session-media) > a {
+    padding-bottom: 2.1em;
+  }
+
   .session-media {
+    position: absolute;
+    right: .75rem;
+    bottom: .5rem;
+    z-index: 2;
     display: flex;
-    flex-wrap: wrap;
-    gap: .25rem 1rem;
-    margin: .25rem 0 0 var(--space-4, 1rem);
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: .75rem;
+    margin: 0;
     font-size: .9em;
+    line-height: 1.4;
 
     a {
       text-decoration: none;
       white-space: nowrap;
-      &:hover { text-decoration: underline; }
+      pointer-events: auto;
+      &:hover, &:focus { text-decoration: underline; }
     }
+  }
+
+  .session-media-label {
+    opacity: .7;
   }
 }
 
