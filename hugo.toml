@@ -1,4 +1,4 @@
-# Module configuration for github.com/IAQI/conference-program.
+# Module configuration for github.com/IAQI/conference-theme.
 # Sites import this module before their visual theme; see README.md.
 [module]
   [module.hugoVersion]

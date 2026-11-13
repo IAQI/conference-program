@@ -1,4 +1,4 @@
-# conference-program
+# conference-theme
 
 The schedule, session pages and accepted papers / posters lists shared by the
 [QCrypt](https://github.com/IAQI/qcrypt-website),
@@ -59,7 +59,7 @@ in session pages. Both still work.
 
 ## From accepted papers to the schedule
 
-Clone this repository next to the website (`~/Web/conference-program`); the
+Clone this repository next to the website (`~/Web/conference-theme`); the
 commands below are run from the website's root folder. Keep raw exports and
 registration lists in `private_data/` (git-ignored). They contain e-mail
 addresses and decisions about rejected papers, and the repositories are
@@ -71,11 +71,11 @@ Export the accepted submissions from HotCRP as JSON (Search → select all →
 Download → JSON) and sanitize them:
 
 ```sh
-python3 ../conference-program/scripts/sanitize_hotcrp_json.py private_data/hotcrp-talks.json \
+python3 ../conference-theme/scripts/sanitize_hotcrp_json.py private_data/hotcrp-talks.json \
     --decision accept -o data/accepted-papers-2027.json
 # posters from a separate HotCRP instance: shift their ids first, so that ids never clash
-python3 ../conference-program/scripts/adjust_pids.py private_data/hotcrp-posters.json private_data/posters-shifted.json --offset 1000
-python3 ../conference-program/scripts/sanitize_hotcrp_json.py private_data/posters-shifted.json --decision accept -o data/posters-2027.json
+python3 ../conference-theme/scripts/adjust_pids.py private_data/hotcrp-posters.json private_data/posters-shifted.json --offset 1000
+python3 ../conference-theme/scripts/sanitize_hotcrp_json.py private_data/posters-shifted.json --decision accept -o data/posters-2027.json
 ```
 
 Useful options: `--search-arxiv` looks up the arXiv id of each paper (slow:
@@ -115,8 +115,8 @@ Google Sheet that the PC chairs fill in), exported as `program/program-2027.csv`
   shown side by side.
 
 ```sh
-python3 ../conference-program/scripts/generate_schedule.py --year 2027 --program program/program-2027.csv --check   # report only
-python3 ../conference-program/scripts/generate_schedule.py --year 2027 --program program/program-2027.csv
+python3 ../conference-theme/scripts/generate_schedule.py --year 2027 --program program/program-2027.csv --check   # report only
+python3 ../conference-theme/scripts/generate_schedule.py --year 2027 --program program/program-2027.csv
 ```
 
 The generator writes `data/schedule-2027.yml` and `data/locations-2027.yml`,
@@ -136,7 +136,7 @@ Ask for the registration export with the questions *"Will you be presenting?"*
 (talk / poster / both / no) and *"Title of presentation"*, then:
 
 ```sh
-python3 ../conference-program/scripts/mark_presenters.py --year 2027 \
+python3 ../conference-theme/scripts/mark_presenters.py --year 2027 \
     --registrations private_data/registrations.xlsx private_data/registrations-late.csv
 ```
 
@@ -156,7 +156,7 @@ database of the three conferences records who presented each talk (CC0 data).
 Once a conference is entered there:
 
 ```sh
-python3 ../conference-program/scripts/quantumdb_presenters.py --venue qcrypt --year 2027
+python3 ../conference-theme/scripts/quantumdb_presenters.py --venue qcrypt --year 2027
 ```
 
 It matches QuantumDB's publications to the accepted papers by title, writes
@@ -172,7 +172,7 @@ both sources cover. Use one script or the other, since both write the same file.
   run:
 
   ```sh
-  python3 ../conference-program/scripts/fetch_videos.py --year 2027 --playlist "https://www.youtube.com/playlist?list=..."
+  python3 ../conference-theme/scripts/fetch_videos.py --year 2027 --playlist "https://www.youtube.com/playlist?list=..."
   ```
 
   - **Requirements and options:** it needs [yt-dlp](https://github.com/yt-dlp/yt-dlp).
@@ -200,7 +200,7 @@ In `hugo.toml` (instead of `theme = "devfest-theme-hugo"`):
 ```toml
 [module]
   [[module.imports]]
-    path = "github.com/IAQI/conference-program"
+    path = "github.com/IAQI/conference-theme"
   [[module.imports]]
     path = "devfest-theme-hugo"   # the site's own theme in themes/
 ```
@@ -209,7 +209,7 @@ Then, once per site:
 
 ```sh
 hugo mod init github.com/IAQI/<site>-website
-hugo mod get github.com/IAQI/conference-program@main
+hugo mod get github.com/IAQI/conference-theme@main
 ```
 
 Commit `go.mod` and `go.sum`: they pin the exact version of the module. Hugo
@@ -218,11 +218,11 @@ locally, and on Netlify via `GO_VERSION = "1.23.4"` under `[build.environment]`
 in `netlify.toml`. (`hugo mod vendor` would instead copy the module into
 `_vendor/`, for build environments without Go; the IAQI sites don't need it.)
 
-- **Updating:** `hugo mod get -u github.com/IAQI/conference-program`, then commit
+- **Updating:** `hugo mod get -u github.com/IAQI/conference-theme`, then commit
   `go.mod` and `go.sum`. A site only changes when its pin is updated.
 - **Local work on the module:** to preview changes to the module itself in a
   site, run
-  `HUGO_MODULE_REPLACEMENTS="github.com/IAQI/conference-program -> $HOME/Web/conference-program" hugo server`.
+  `HUGO_MODULE_REPLACEMENTS="github.com/IAQI/conference-theme -> $HOME/Web/conference-theme" hugo server`.
 
 Optional site parameters (`[params]` in `hugo.toml`):
 
