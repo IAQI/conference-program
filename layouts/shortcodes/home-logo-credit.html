@@ -1,0 +1,6 @@
+{{ $_hugo_config := `{ "version": 1 }` }}
+<section class="logo-credit">
+	<h2>{{ .Get "heading" }}</h2>
+	<img src="{{ .Get "img" }}" alt="{{ .Get "heading" }}" />
+	{{ .Inner }}
+</section>

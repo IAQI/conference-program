@@ -1,13 +1,21 @@
 # conference-theme
 
-The schedule, session pages and accepted papers / posters lists shared by the
-[QCrypt](https://github.com/IAQI/qcrypt-website),
+The shared theme of the [QCrypt](https://github.com/IAQI/qcrypt-website),
 [TQC](https://github.com/IAQI/tqc-website) and
-[QIP](https://github.com/IAQI/qip-website) websites, together with the scripts
+[QIP](https://github.com/IAQI/qip-website) websites: the layouts and styles of
+all pages, the schedule, session and accepted-papers templates, and the scripts
 that take a conference from the HotCRP list of accepted papers to a fully
-linked schedule.
+linked schedule and from one year to the next. It is a
+[Hugo module](https://gohugo.io/hugo-modules/); each website imports it and
+keeps only its content, data, settings, colours, logos and the few files it
+deliberately does differently.
 
-Everything is keyed by the **HotCRP paper id** (`pid`). Here is what the
+**[docs/website-guide.md](docs/website-guide.md)** explains how to work on
+one of the websites: running it locally, how the content is organised, menus,
+footer, home page, team, speakers, setting up a new year, colours. This README
+covers the program part.
+
+For the program, everything is keyed by the **HotCRP paper id** (`pid`). Here is what the
 websites get from that:
 
 - **Schedule.** Each card shows its papers with their authors, the presenting
@@ -23,18 +31,20 @@ websites get from that:
 
 | path | what |
 |---|---|
-| `layouts/schedule/list.html` | the schedule page (`type: schedule`) |
-| `layouts/sessions/single.html` | a session page (`type: sessions`) |
-| `layouts/partials/schedule-session.html` | one card on the schedule |
-| `layouts/partials/paper.html`, `paper-simple.html`, `paper-authors.html`, `location.html` | paper entries |
-| `layouts/partials/program/*.html` | helpers: year, video and slides lookup, paper → session index, merged papers |
-| `layouts/shortcodes/papers-accepted.html`, `posters-accepted.html`, `papers-upgraded.html` | the lists |
-| `assets/style/_program.scss` | styles for the elements above. Each site adds `@use "program";` to its `theme-YEAR.scss` |
-| `scripts/` | the pipeline scripts below (Python 3, `pip install -r requirements.txt`) |
+| `layouts/` | all page layouts and shortcodes (home page blocks, team, partners, speakers, text pages, header, footer, ...) |
+| `layouts/schedule/list.html`, `layouts/sessions/single.html` | the schedule page (`type: schedule`) and a session page (`type: sessions`) |
+| `layouts/partials/schedule-session.html`, `paper*.html`, `location.html`, `program/*.html` | schedule cards, paper entries and their helpers (year, videos, slides, paper → session index, merged papers) |
+| `layouts/shortcodes/papers-accepted.html`, `posters-accepted.html`, `code-of-conduct.html`, `home-*.html`, ... | the shortcodes used in content pages |
+| `assets/style/_theme.scss` | the whole stylesheet; a site's `theme-YEAR.scss` starts with `@use "theme";` |
+| `assets/style/_program.scss`, `partials/`, `pages/` | the styles, by part of the site |
+| `assets/script/`, `assets/icons/` | scripts and icons |
+| `archetypes/`, `i18n/en.toml` | page templates for `hugo new`, interface texts |
+| `scripts/` | the pipeline scripts below and `new_year.py` (Python 3, `pip install -r requirements.txt`) |
+| `docs/` | [website-guide.md](docs/website-guide.md) (working on a site), [theme-reference.md](docs/theme-reference.md) (the original theme's blocks) |
 
-Everything else stays in each site's own theme: colours, fonts, the look of the
-cards, the home page and so on. A site can override any single file of this
-module by putting its own copy in its `layouts/` (or `assets/`) folder.
+A site keeps its own `assets/style/theme-YEAR.scss` (colours), logos and
+favicons, and can override any single file of this module by putting its own
+copy at the same path in its `layouts/`, `assets/` or `i18n/` folder.
 
 ## Data files (per site, per year)
 
@@ -195,14 +205,12 @@ accepted lists.
 
 ## Using the module in a site
 
-In `hugo.toml` (instead of `theme = "devfest-theme-hugo"`):
+In `hugo.toml` (no `theme =` line):
 
 ```toml
 [module]
   [[module.imports]]
     path = "github.com/IAQI/conference-theme"
-  [[module.imports]]
-    path = "devfest-theme-hugo"   # the site's own theme in themes/
 ```
 
 Then, once per site:
@@ -215,8 +223,17 @@ hugo mod get github.com/IAQI/conference-theme@main
 Commit `go.mod` and `go.sum`: they pin the exact version of the module. Hugo
 downloads that version at build time, which needs [Go](https://go.dev/dl/):
 locally, and on Netlify via `GO_VERSION = "1.23.4"` under `[build.environment]`
-in `netlify.toml`. (`hugo mod vendor` would instead copy the module into
-`_vendor/`, for build environments without Go; the IAQI sites don't need it.)
+in `netlify.toml`.
+
+Each year's stylesheet `assets/style/theme-YEAR.scss` in the site:
+
+```scss
+@use "theme";
+:root { --primary: #ac191c; --primary-txt: #ffffff; }
+```
+
+and the site's `i18n/en.toml` names its charter and history pages
+(`footer_charter`, `footer_history`).
 
 - **Updating:** `hugo mod get -u github.com/IAQI/conference-theme`, then commit
   `go.mod` and `go.sum`. A site only changes when its pin is updated.
