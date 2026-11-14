@@ -1,0 +1,30 @@
+{{/* A conference code of conduct (the wording adopted by QCrypt 2026).
+
+     {{< code-of-conduct name="QCrypt" year="2026" />}}
+     or, with extra text after the standard one:
+     {{< code-of-conduct name="QCrypt" >}}To report an incident, write to ...{{< /code-of-conduct >}}
+
+     name  the conference name (default: site.Params.conferenceName, else "the conference")
+     year  the edition (default: the page's year)
+     The text inside the shortcode, if any, is added after the standard text
+     (e.g. whom to contact). A conference that wants different wording keeps
+     its own text in the page instead of using this shortcode. */}}
+{{ $name := .Get "name" | default site.Params.conferenceName | default "the conference" }}
+{{ $year := .Get "year" | default (partial "program/year.html" .Page) }}
+{{ $event := printf "%s %s" $name $year }}
+{{ $md := printf `The open exchange of ideas and the freedom of thought and expression are central to the aims and goals of %[1]s; these require an environment that fosters dignity, understanding, and mutual respect, and that embraces diversity.
+
+The organizers and the Steering Committee of %[2]s are committed to an inclusive conference experience, respectful of all participants and free of discrimination, harassment, bullying, or retaliation.
+
+All committee members, authors, attendees, speakers, sponsors, and volunteers at %[2]s are expected to read and agree with the following code of conduct. It applies to all event-related engagements, including committee work, event venues, online interactions and event-related social activities.
+
+We expect all participants in %[2]s activities to:
+- Exercise respect in your communications and actions.
+- Refrain from demeaning, discriminatory, or harassing behavior and communications.
+- Abstain from making use of sexual & sexualized imagery in talks and posters.
+- Be mindful of your surroundings and your fellow participants: for example, other people may hear or read inappropriate comments even if they are not your intended audience.
+- Alert community leaders and get involved (if safe and possible) when you notice a dangerous situation, someone in distress, or violations of this policy, even if they seem inconsequential.
+
+Participants asked to stop any harassing behavior are expected to comply immediately. If a participant engages in unacceptable behavior, the event organizers and the Steering Committee retain the right to take any actions to keep the conference a welcoming environment for all participants. This includes warning the offender or expulsion from the conference.` $name $event }}
+{{ $md | .Page.RenderString (dict "display" "block") }}
+{{ with .Inner }}{{ . | $.Page.RenderString (dict "display" "block") }}{{ end }}
