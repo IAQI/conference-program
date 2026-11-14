@@ -68,6 +68,20 @@
   --breaks: var(--tag1);
   --general: var(--tag8);
 
+  /* Schedule colours per session type (see partials/_tags.scss). A site
+     changes them in its theme-YEAR.scss, e.g.  :root { --sched-meal: #9BC2E6; } */
+  --sched-logistics: #cfe2f3;   /* registration, check-in, announcements */
+  --sched-break: var(--sched-logistics);
+  --sched-meal: var(--sched-logistics);
+  --sched-social: #fce5cd;      /* reception, excursion, dinner party */
+  --sched-poster: #fff2cc;
+  --sched-plenary: #b4a7d6;     /* opening, closing, business meeting, awards */
+  --sched-invited: #d9d2e9;
+  --sched-tutorial: var(--sched-invited);
+  --sched-contributed: #e6e0f0;
+  --sched-sponsor: #d9ead3;
+  --sched-notice: #fff3cd;
+
   --office-hours: floralwhite;
   --keynote: paleturquoise;
 

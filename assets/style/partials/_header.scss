@@ -236,11 +236,11 @@ body > header {
           transition: transform 0.3s ease;
         }
 
-        &.active > a::after {
+        &.open > a::after {
           transform: rotate(180deg);
         }
         
-        &.active .submenu {
+        &.open .submenu {
           display: block;
         }
       }

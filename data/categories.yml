@@ -1,0 +1,33 @@
+# Labels of the session tags, shown as a chip on session pages (the schedule
+# shows the colour instead). The tags and their colours: assets/style/partials/_tags.scss.
+# A site that needs other labels puts its own data/categories.yml (it replaces this file).
+- key: logistics
+  name: "logistics"
+- key: break
+  name: "\U00002615 break"
+- key: meal
+  name: "meal"
+- key: social
+  name: "social"
+- key: poster
+  name: "poster session"
+- key: plenary
+  name: "plenary"
+- key: invited
+  name: "invited talk"
+- key: tutorial
+  name: "tutorial"
+- key: contributed
+  name: "contributed talks"
+- key: track
+  name: "contributed talks"
+- key: sponsor
+  name: "sponsor"
+- key: notice
+  name: "notice"
+- key: crypto
+  name: "crypto"
+- key: physics
+  name: "physics"
+- key: other
+  name: "other"

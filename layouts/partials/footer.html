@@ -54,7 +54,11 @@
 						{{/* links to other sites are used as they are; site paths get the year */}}
 						{{ $url := .url }}
 						{{ if not (or (hasPrefix $url "https://") (hasPrefix $url "http://")) }}
-						{{ $url = printf "/%s/%s" $currentYear (strings.TrimPrefix "/" $url) }}
+						{{/* the year of the page being viewed, if it has that page; else the current year */}}
+						{{ $path := strings.TrimSuffix "/" (strings.TrimPrefix "/" $url) }}
+						{{ $year := $currentYear }}
+						{{ with $.Section }}{{ if site.GetPage (printf "/%s/%s" . $path) }}{{ $year = . }}{{ end }}{{ end }}
+						{{ $url = printf "/%s/%s" $year (strings.TrimPrefix "/" $url) }}
 						{{ end }}
 						<a href="{{ $url }}" {{ if .newTab }}target="_blank" rel="noopener" {{end}}>
 							{{ if .nameKey }}

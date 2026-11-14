@@ -71,14 +71,22 @@
       padding-left: unset;
       display: flex;
       align-items: center;
+      /* no coloured block behind the talk title on the session page */
+      background: none;
 
       h1 {
         flex-grow: 1;
+        font-weight: 700;
       }
 
       .tags {
         margin-right: 1ch;
         white-space: nowrap;
+
+        /* hide the chip when the session's tag has no label */
+        &:empty {
+          display: none;
+        }
       }
     }
 
