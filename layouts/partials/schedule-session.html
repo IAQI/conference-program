@@ -34,14 +34,12 @@
 {{ if in (slice "None" "none" "null" "TBA" "TBD") (string $chair) }}{{ $chair = "" }}{{ end }}
 
 <a href="{{ $page.RelPermalink }}">
-	{{ if not $single }}
 	<h4>
 		{{ $page.Title }}
 		{{ with $page.Params.note }}<em class="session-note">({{ . }})</em>{{ end }}
 		{{ with $page.Params.language }}<span class="language {{ anchorize . }}"></span>{{ end }}
-		{{ with $chair }}<span class="chair"><strong>Chair: </strong>{{ . }}</span>{{ end }}
+		{{ if not $single }}{{ with $chair }}<span class="chair"><strong>Chair: </strong>{{ . }}</span>{{ end }}{{ end }}
 	</h4>
-	{{ end }}
 	{{ with $page.Params.cardOptions }}
 	<ul class="card-options">
 		{{ range . }}<li>{{ . | safeHTML }}</li>{{ end }}
@@ -49,8 +47,14 @@
 	{{ end }}
 	{{ $rooms := "" }}
 	{{ with $session.location }}{{ $rooms = partial "program/session-locations.html" (dict "location" . "year" $year) }}{{ end }}
-	{{ if not $single }}
 	{{ $rooms }}
+	{{ if $single }}
+	{{/* a talk of one paper: its title is the card title, the authors follow */}}
+	<div class="single-paper-authors">
+		{{ partial "paper-authors.html" (dict "paper" (index $records 0) "currentYear" $year "emphasis" "em") }}
+	</div>
+	{{ with $chair }}<div class="chair"><strong>Chair: </strong>{{ . }}</div>{{ end }}
+	{{ else }}
 	<hr>
 	{{ end }}
 
@@ -70,8 +74,8 @@
 	</div>
 	{{ end }}
 
-	{{ with $records }}
-	<ul class="paper-list{{ if $single }} single-paper{{ end }}">
+	{{ if not $single }}{{ with $records }}
+	<ul class="paper-list">
 		{{ range $paper := . }}
 			{{ if partial "program/should-display.html" $paper }}
 			<li class="paper-short">
@@ -84,11 +88,7 @@
 			{{ end }}
 		{{ end }}
 	</ul>
-	{{ end }}
-	{{ if $single }}
-	{{ $rooms }}
-	{{ with $chair }}<div class="chair"><strong>Chair: </strong>{{ . }}</div>{{ end }}
-	{{ end }}
+	{{ end }}{{ end }}
 
 	{{ if and $page.Params.speakers (ne site.Params.programScheduleSpeakers false) }}
 	<ul class="speakers">

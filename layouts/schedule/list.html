@@ -75,7 +75,15 @@ City id: {{ $timeanddate_cityid }}
 			{{ range $slot := $slots }}
 				{{ $sessionPage := site.GetPage (printf "/%s/sessions/%s" $currentYear $slot.session) }}
 				{{ if $sessionPage }}
-				<div class="session tag-{{ anchorize (delimit ($sessionPage.Params.tags | default (slice)) " ") }}">
+				{{/* one class per tag (colour), and has-page when the session page has
+				     something to show, which makes the card a link */}}
+				{{ $classes := slice "session" }}
+				{{ range $sessionPage.Params.tags | default slice }}{{ $classes = $classes | append (printf "tag-%s" (anchorize .)) }}{{ end }}
+				{{ $p := $sessionPage.Params }}
+				{{ if or $p.papers $p.speakers $p.videoId $p.videoIds $p.presentation $p.presentations (ne (strings.TrimSpace (string $sessionPage.Content)) "") }}
+					{{ $classes = $classes | append "has-page" }}
+				{{ end }}
+				<div class="{{ delimit $classes " " }}">
 					<span class="startt">
 						<span class="hh">{{ index $hhmm 0 }}</span>
 						<span class="mm">{{ index $hhmm 1 }}</span>

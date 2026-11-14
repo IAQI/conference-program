@@ -1,9 +1,20 @@
+{{/* The top bar: logo and the menu of the page's year ([[menu.YEAR]] in
+     hugo.toml plus `menu: {YEAR: ...}` in the pages' front matter).
+
+     The intended structure, which every year grows into (see
+     docs/website-guide.md, "Menus"):
+       Home | Program ▾ | Schedule | Attend ▾ | Sponsors | Committees | About ▾
+     but the header shows whatever the year defines. Parents with children
+     are not links; a parent is marked active when one of its children is
+     the current page. Once content/YEAR/schedule/ is published, it is also
+     listed first under the parent with identifier "program". */}}
 <header>
 	{{ $currentPage := . }}
 	{{ $currentYear := string .Site.Params.currentYear }}
 	{{ if not (eq .Section "") }}
 		{{ $currentYear = .Section }}
 	{{ end }}
+	{{ $schedule := site.GetPage (printf "/%s/schedule" $currentYear) }}
 
 	<div class="top-content">
 	  <div class="logo">
@@ -12,12 +23,12 @@
 				{{ $logoPath = (index .Site.Params $currentYear).logos.header }}
 			{{ else }}
 				{{ warnf "currentYear not defined: %s" $currentYear }}
-			{{ end }}		
+			{{ end }}
 			<a href="{{ printf "/%s/" $currentYear | relLangURL }}">
      	   <img src="{{ $logoPath }}" alt="logo {{ .Site.Title }}">
 		</a>
 	  </div>
-  
+
 	  <input type="checkbox" id="menu-burger" class="visually-hidden" aria-label="Menu"/>
 	  <label for="menu-burger">
 		{{ partial "icon.html" "menu" }}
@@ -25,22 +36,32 @@
 	  </label>
 
 	<nav>
-	  <ul class="menu"></ul>
+	  <ul class="menu">
 		{{ $yearMenu := index .Site.Menus $currentYear }}
 		{{ range $yearMenu }}
 			{{ if .HasChildren }}
-				<li class="has-children {{ if $currentPage.IsMenuCurrent $currentYear . }}active{{ end }}">
-				<!-- make the parent menu item not clickable -->
-				<a>{{ .Name }}</a> 
+				{{ $isCurrent := $currentPage.HasMenuCurrent $currentYear . }}
+				{{ if and (eq .Identifier "program") $schedule (eq $currentPage $schedule) }}{{ $isCurrent = true }}{{ end }}
+				<li class="has-children{{ if $isCurrent }} active{{ end }}">
+				<a>{{ .Name }}</a>
 				<ul class="submenu">
+					{{ if and (eq .Identifier "program") $schedule }}
+					<li class="{{ if eq $currentPage $schedule }}active{{ end }}">
+						<a href="{{ $schedule.RelPermalink }}">{{ $schedule.LinkTitle }}</a>
+					</li>
+					{{ end }}
 					{{ range .Children }}
+					{{ $isSchedule := false }}
+					{{ with .Page }}{{ if and $schedule (eq . $schedule) }}{{ $isSchedule = true }}{{ end }}{{ end }}
+					{{ if not $isSchedule }}
 					<li class="{{ if $currentPage.IsMenuCurrent $currentYear . }}active{{ end }}">
 						<a href="{{ .URL | relLangURL }}">{{ .Name }}</a>
 					</li>
 					{{ end }}
+					{{ end }}
 				</ul>
 				</li>
-			{{ else }} <!-- no children -->
+			{{ else }}
 			<li class="{{ if $currentPage.IsMenuCurrent $currentYear . }}active{{ end }}">
 				<a href="{{ .URL | relLangURL }}">{{ .Name }}</a>
 			</li>

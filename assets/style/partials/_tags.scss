@@ -30,30 +30,12 @@
   background-color: var(--wtf);
 }
 
-.tag-keynote {
-  background-color: var(--keynote);
-}
 
 .tag-other {
   background-color: var(--wtf);
 }
 
-.tag-break {
-  background-color: var(--breaks);
-  background-image: url('/images/backgrounds/pause.jpg');
-}
 
-.tag-remoco {
-  background-color: var(--breaks);
-}
-
-.tag-poster {
-  background-color: var(--web);
-}
-
-.tag-office-hours {
-  background-color: var(--office-hours);
-}
 
 .tag-general {
   background-color: var(--general);
@@ -67,19 +49,18 @@ section .tags {
   text-shadow: var(--extruded-light);
 }
 
-
-.tag-open {
-  background-image: url('/images/backgrounds/open.png');
-}
-
-.tag-pause {
-  background-image: url('/images/backgrounds/pause.png');
-}
-
-.tag-lunch {
-  background-image: url('/images/backgrounds/lunch.jpg');
-}
-
-.tag-party {
-  background-image: url('/images/backgrounds/party.jpg');
-}
+/* Session types on the schedule. Use one of these as the `tags:` of a session
+   page (column `tags` of the program spreadsheet); the colours are the
+   --sched-* variables in _root.scss, which a site can change in its
+   theme-YEAR.scss. Older tag names are kept as aliases. */
+.tag-logistics, .tag-registration, .tag-office-hours { background-color: var(--sched-logistics, #cfe2f3); }
+.tag-break, .tag-pause, .tag-remoco { background-color: var(--sched-break, var(--sched-logistics, #cfe2f3)); }
+.tag-meal, .tag-lunch, .tag-dinner, .tag-banquet { background-color: var(--sched-meal, var(--sched-logistics, #cfe2f3)); }
+.tag-social, .tag-party, .tag-reception, .tag-excursion { background-color: var(--sched-social, #fce5cd); }
+.tag-poster { background-color: var(--sched-poster, #fff2cc); }
+.tag-plenary, .tag-open, .tag-welcome, .tag-closing, .tag-award, .tag-business { background-color: var(--sched-plenary, #b4a7d6); }
+.tag-invited, .tag-keynote { background-color: var(--sched-invited, #d9d2e9); }
+.tag-tutorial { background-color: var(--sched-tutorial, var(--sched-invited, #d9d2e9)); }
+.tag-contributed, .tag-track { background-color: var(--sched-contributed, var(--sched-track, #e6e0f0)); }
+.tag-sponsor { background-color: var(--sched-sponsor, #d9ead3); }
+.tag-notice, .tag-checkout { background-color: var(--sched-notice, #fff3cd); }

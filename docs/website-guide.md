@@ -70,17 +70,40 @@ The original theme's documentation of these blocks is in [theme-reference.md](th
 
 ### Menus
 
-The top menu of each year is defined in `hugo.toml` under `[[menu.<year>]]`
-(Home, Technical Program, Attend, Sponsors, Committees, ...). Entries without a
-page (Technical Program, Attend) only group sub-entries. Other pages add
-themselves to a menu in their front matter:
+All three sites aim for the same top bar (modelled on the IACR conferences,
+e.g. https://eurocrypt.iacr.org/2026/):
+
+| top-level | identifier | weight | dropdown (only what exists) |
+|---|---|---|---|
+| Home | `home` | 10 | – |
+| Program ▾ | `program` | 20 | Schedule (added automatically once published) · Accepted papers (10) · Accepted posters (12) · Speakers (20) · Sessions (25) · Call for papers (30) · Presentation & poster instructions (40) |
+| Schedule | – | 25 | set in `schedule/_index.md`; appears once that page is published |
+| Attend ▾ | `attend` | 30 | Registration (10) · Venue & travel (20) · Accommodation (25) · Student support (30) · Visas (35) · Activities & excursions (40) · Code of conduct (50) · Photos (60) |
+| Sponsors | `sponsors` | 40 | – |
+| Committees | `committees` | 50 | – |
+| About ▾ | `about` | 60 | About the conference / charter (10) · History (20) · Future editions (30) · About the logo (40) · local pages (50+) |
+
+This is the structure each year grows into, not a rule. Early in a year,
+before there is a program, it is fine (and common) to show the call for
+papers and the registration as top-level items, as QIP 2027 does; once the
+papers are accepted, they move into Program ▾ and Attend ▾. `new_year.py`
+starts each new year from the previous year's menus.
+
+The parents (Program, Attend, About, and the plain items Home, Sponsors,
+Committees) are defined in `hugo.toml` under `[[menu.<year>]]`; a parent with
+a dropdown is not a link itself. Pages add themselves under a parent in their
+front matter:
 
 ```yaml
 menu:
     2027:
-        weight: 20
-        parent: technical-program
+        parent: program
+        weight: 10
 ```
+
+Mind that `parent: #program` is a YAML comment, not a parent. The schedule
+page puts itself at the top level (no parent, weight 25); the header also lists
+it first under Program.
 
 ### Footer
 
@@ -116,6 +139,26 @@ schedule page lists them by day and time from `data/schedule-<year>.yml`.
 Both are best produced from the program spreadsheet with `generate_schedule.py`;
 the [README](../README.md) describes the whole pipeline from the accepted papers
 to presenters and videos.
+
+On the schedule, each card is coloured by the session's tag (one per session):
+
+| tag | for | colour variable |
+|---|---|---|
+| `logistics` | registration, check-in, announcements | `--sched-logistics` |
+| `break` | coffee breaks | `--sched-break` |
+| `meal` | lunch, dinner, banquet | `--sched-meal` |
+| `social` | reception, excursion | `--sched-social` |
+| `poster` | poster sessions | `--sched-poster` |
+| `plenary` | opening, closing, business meeting, awards | `--sched-plenary` |
+| `invited`, `tutorial` | invited and tutorial talks | `--sched-invited`, `--sched-tutorial` |
+| `contributed` | contributed talks (`track` works too) | `--sched-contributed` |
+| `sponsor` | sponsored talks, exhibition | `--sched-sponsor` |
+| `notice` | something to stand out (e.g. check-out) | `--sched-notice` |
+
+A site sets its own colours in `theme-<year>.scss`, e.g.
+`:root { --sched-meal: #9BC2E6; }`. A card is a link to its session page only
+when that page has something to show (papers, speakers, text, slides or a
+video); sessions in parallel are shown side by side with centred titles.
 
 ## A new year
 
